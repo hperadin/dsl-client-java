@@ -85,8 +85,8 @@ class HttpClient {
 	private final SSLSocketFactory SSL_SOCKET_FACTORY;
 	private static final String MIME_TYPE = "application/json";
 	private int currentUrl;
-	private final BlockingQueue<JsonWriter> jsonWriters;
-	private final BlockingQueue<byte[]> resultBuffers;
+	private final BlockingDeque<JsonWriter> jsonWriters;
+	private final BlockingDeque<byte[]> resultBuffers;
 
 	public HttpClient(
 			final Properties properties,
@@ -102,11 +102,11 @@ class HttpClient {
 		this.remoteUrls = properties.getProperty("api-url").split(",\\s+");
 
 		int totalWriters = Runtime.getRuntime().availableProcessors() * 2;
-		jsonWriters = new ArrayBlockingQueue<JsonWriter>(totalWriters);
-		resultBuffers = new ArrayBlockingQueue<byte[]>(totalWriters);
+		jsonWriters = new LinkedBlockingDeque<JsonWriter>(totalWriters);
+		resultBuffers = new LinkedBlockingDeque<byte[]>(totalWriters);
 		for (int i = 0;i < totalWriters; i++) {
-			jsonWriters.add(new JsonWriter());
-			resultBuffers.add(new byte[1024]);
+			jsonWriters.push(new JsonWriter());
+			resultBuffers.push(new byte[1024]);
 		}
 
 		SSL_SOCKET_FACTORY = createSSLSocketFactory(properties);
@@ -191,13 +191,17 @@ class HttpClient {
 			logger.debug("Sending request [{}]: {}", method, service);
 		} else {
 			if (content instanceof JsonObject) {
-				JsonWriter sw = jsonWriters.take();
-				JsonObject jo = (JsonObject)content;
-				jo.serialize(sw, true);
-				JsonWriter.Bytes bytes = sw.toBytes();
-				bodyContent = bytes.content;
-				bodySize = bytes.length;
-				jsonWriters.put(sw);
+				JsonWriter sw = jsonWriters.pop();
+				try {
+					JsonObject jo = (JsonObject)content;
+					jo.serialize(sw, true);
+					JsonWriter.Bytes bytes = sw.toBytes();
+					bodyContent = bytes.content;
+					bodySize = bytes.length;
+				} finally{
+					jsonWriters.push(sw);
+				}
+
 			} else {
 				bodyContent = JsonSerialization.serializeBytes(content);
 				bodySize = bodyContent.length;
@@ -245,15 +249,17 @@ class HttpClient {
 		return executorService.submit(new Callable<byte[]>() {
 			@Override
 			public byte[] call() throws IOException, InterruptedException {
-				final byte[] buffer = resultBuffers.take();
-				final Response response = doRawRequest(service, headers, method, content, expected, buffer, start);
-				if (response.code < 300) {
-					final byte[] result = Arrays.copyOf(response.body, response.size);
-					resultBuffers.put(response.body);
-					return result;
-				} else {
-					resultBuffers.put(buffer);
-					return response.body;
+				byte[] buffer = resultBuffers.pop();
+				try {
+					final Response response = doRawRequest(service, headers, method, content, expected, buffer, start);
+					if (response.code < 300) {
+						buffer = response.body;
+						return Arrays.copyOf(response.body, response.size);
+					} else {
+						return response.body;
+					}		
+				} finally {
+					resultBuffers.push(buffer);
 				}
 			}
 		});
@@ -289,22 +295,25 @@ class HttpClient {
 			@SuppressWarnings("unchecked")
 			@Override
 			public TResult call() throws IOException, InterruptedException {
-				final byte[] buffer = resultBuffers.take();
-				final Response response = doRawRequest(service, emptyHeaders, method, content, expected, buffer, start);
-				if (JsonObject.class.isAssignableFrom(manifest)) {
-					JsonReader.ReadJsonObject<JsonObject> reader = getReader(manifest);
-					if (reader != null) {
-						JsonReader json = new JsonReader(response.body, response.size, locator);
-						if (json.getNextToken() == '{') {
-							final TResult result = (TResult) reader.deserialize(json, locator);
-							resultBuffers.put(response.body);
-							return result;
+				byte[] buffer = resultBuffers.pop();
+				try {
+					final Response response = doRawRequest(service, emptyHeaders, method, content, expected, buffer, start);
+					if (JsonObject.class.isAssignableFrom(manifest)) {
+						JsonReader.ReadJsonObject<JsonObject> reader = getReader(manifest);
+						if (reader != null) {
+							JsonReader json = new JsonReader(response.body, response.size, locator);
+							if (json.getNextToken() == '{') {
+								buffer = response.body;
+								return (TResult) reader.deserialize(json, locator);
+							}
 						}
 					}
+
+					buffer = response.body;
+					return jsonDeserialization.deserialize(manifest, response.body, response.size);
+				} finally {
+					resultBuffers.push(buffer);
 				}
-				final TResult result = jsonDeserialization.deserialize(manifest, response.body, response.size);
-				resultBuffers.put(response.body);
-				return result;
 			}
 		});
 	}
@@ -322,27 +331,31 @@ class HttpClient {
 			@SuppressWarnings("unchecked")
 			@Override
 			public List<TResult> call() throws IOException, InterruptedException {
-				final byte[] buffer = resultBuffers.take();
-				final Response response = doRawRequest(service, emptyHeaders, method, content, expected, buffer, start);
-				if (JsonObject.class.isAssignableFrom(manifest)) {
-					JsonReader.ReadJsonObject<JsonObject> reader = getReader(manifest);
-					if (reader != null) {
-						final JsonReader json = new JsonReader(response.body, response.size, locator);
-						if (json.getNextToken() == '[') {
-							if (json.getNextToken() == ']') {
-								resultBuffers.put(response.body);
-								return new ArrayList<TResult>();
+				byte[] buffer = resultBuffers.pop();
+				try {
+					final Response response = doRawRequest(service, emptyHeaders, method, content, expected, buffer, start);
+					if (JsonObject.class.isAssignableFrom(manifest)) {
+						JsonReader.ReadJsonObject<JsonObject> reader = getReader(manifest);
+						if (reader != null) {
+							final JsonReader json = new JsonReader(response.body, response.size, locator);
+							if (json.getNextToken() == '[') {
+								if (json.getNextToken() == ']') {
+									buffer = response.body;
+									return new ArrayList<TResult>();
+								}
+								buffer = response.body;
+								return (List<TResult>) json.deserializeCollection(reader);
 							}
-							final List<TResult> result = (List<TResult>)json.deserializeCollection(reader);
-							resultBuffers.put(response.body);
-							return result;
 						}
 					}
+					buffer = response.body;
+					return jsonDeserialization.deserialize(
+						JsonSerialization.buildCollectionType(ArrayList.class, manifest), 
+						response.body, 
+						response.size);
+				} finally {
+					resultBuffers.push(buffer);
 				}
-				final JavaType type = JsonSerialization.buildCollectionType(ArrayList.class, manifest);
-				final List<TResult> result = jsonDeserialization.deserialize(type, response.body, response.size);
-				resultBuffers.put(response.body);
-				return result;
 			}
 		});
 	}
