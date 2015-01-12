@@ -36,254 +36,264 @@ public final class JsonWriter extends Writer {
 	public static final byte ESCAPE = '\\';
 
 	public final void writeNull() {
-		final int s = position;
-		position += 4;
-		if (position >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2);
+		final int start = this.position;
+		this.position += 4;
+		if (this.position >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
 		}
-		final byte[] result_local = result;
-		result_local[s] = 'n';
-		result_local[s + 1] = 'u';
-		result_local[s + 2] = 'l';
-		result_local[s + 3] = 'l';
+		final byte[] _result = this.result;
+		_result[start] = 'n';
+		_result[start + 1] = 'u';
+		_result[start + 2] = 'l';
+		_result[start + 3] = 'l';
 	}
 
 	public final void writeByte(final byte c) {
-		if (position == result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2);
+		if (this.position == this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
 		}
-		result[position++] = c;
+		this.result[this.position++] = c;
 	}
 
 	public final void writeString(final String str) {
-		final int len = str.length();
-		if (position + (len << 2) + (len << 1) + 2 >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2 + (len << 2) + (len << 1) + 2);
+		final int stringLen = str.length();
+		final int _position = this.position;
+		if (_position + (stringLen << 2) + (stringLen << 1) + 2 >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + (stringLen << 2) + (stringLen << 1) + 2);
 		}
-		final byte[] result_local = result;
-		result_local[position] = QUOTE;
-		int cur = position + 1;
-		for (int i = 0; i < str.length(); i++) {
+		final byte[] _result = this.result;
+		_result[_position] = QUOTE;
+		int cur = _position + 1;
+		for (int i = 0; i < stringLen; i++) {
 			final char c = str.charAt(i);
-			if (c == '"') {
-				result_local[cur++] = ESCAPE;
-				result_local[cur++] = QUOTE;
-			} else if (c == '\\') {
-				result_local[cur++] = ESCAPE;
-				result_local[cur++] = ESCAPE;
-			} else if (c < 32) {
-				if (c == 8) {
-					result_local[cur++] = ESCAPE;
-					result_local[cur++] = 'b';
-				} else if (c == 9) {
-					result_local[cur++] = ESCAPE;
-					result_local[cur++] = 't';
-				} else if (c == 10) {
-					result_local[cur++] = ESCAPE;
-					result_local[cur++] = 'n';
-				} else if (c == 12) {
-					result_local[cur++] = ESCAPE;
-					result_local[cur++] = 'f';
-				} else if (c == 13) {
-					result_local[cur++] = ESCAPE;
-					result_local[cur++] = 'r';
+			if (c == QUOTE) {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = QUOTE;
+				} else if (c == ESCAPE) {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = ESCAPE;
+				} else if (c < 32) {
+				if (c == '\b') {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = 'b';
+				} else if (c == '\t') {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = 't';
+				} else if (c == '\n') {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = 'n';
+				} else if (c == '\f') {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = 'f';
+				} else if (c == '\r') {
+					_result[cur++] = ESCAPE;
+					_result[cur++] = 'r';
 				} else {
-					result_local[cur] = ESCAPE;
-					result_local[cur + 1] = 'u';
-					result_local[cur + 2] = '0';
-					result_local[cur + 3] = '0';
+					_result[cur] = ESCAPE;
+					_result[cur + 1] = 'u';
+					_result[cur + 2] = '0';
+					_result[cur + 3] = '0';
 					switch (c) {
 						case 0:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '0';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '0';
 							break;
 						case 1:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '1';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '1';
 							break;
 						case 2:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '2';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '2';
 							break;
 						case 3:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '3';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '3';
 							break;
 						case 4:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '4';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '4';
 							break;
 						case 5:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '5';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '5';
 							break;
 						case 6:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '6';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '6';
 							break;
 						case 7:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = '7';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = '7';
 							break;
 						case 11:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = 'B';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = 'B';
 							break;
 						case 14:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = 'E';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = 'E';
 							break;
 						case 15:
-							result_local[cur + 4] = '0';
-							result_local[cur + 5] = 'F';
+							_result[cur + 4] = '0';
+							_result[cur + 5] = 'F';
 							break;
 						case 16:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '0';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '0';
 							break;
 						case 17:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '1';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '1';
 							break;
 						case 18:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '2';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '2';
 							break;
 						case 19:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '3';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '3';
 							break;
 						case 20:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '4';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '4';
 							break;
 						case 21:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '5';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '5';
 							break;
 						case 22:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '6';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '6';
 							break;
 						case 23:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '7';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '7';
 							break;
 						case 24:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '8';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '8';
 							break;
 						case 25:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = '9';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = '9';
 							break;
 						case 26:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'A';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'A';
 							break;
 						case 27:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'B';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'B';
 							break;
 						case 28:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'C';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'C';
 							break;
 						case 29:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'D';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'D';
 							break;
 						case 30:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'E';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'E';
 							break;
 						default:
-							result_local[cur + 4] = '1';
-							result_local[cur + 5] = 'F';
+							_result[cur + 4] = '1';
+							_result[cur + 5] = 'F';
 							break;
 					}
 					cur += 6;
 				}
 			} else if (c < 0x007F) {
-				result_local[cur++] = (byte) c;
+				_result[cur++] = (byte) c;
 			} else {
 				final int cp = str.codePointAt(i);
 				if (Character.isSupplementaryCodePoint(cp)) {
 					i++;
 				}
 				if (cp == 0x007F) {
-					result_local[cur++] = (byte) cp;
+					_result[cur++] = (byte) cp;
 				} else if (cp <= 0x7FF) {
-					result_local[cur++] = (byte) (0xC0 | ((cp >> 6) & 0x1F));
-					result_local[cur++] = (byte) (0x80 | (cp & 0x3F));
+					_result[cur++] = (byte) (0xC0 | ((cp >> 6) & 0x1F));
+					_result[cur++] = (byte) (0x80 | (cp & 0x3F));
 				} else if ((cp < 0xD800) || (cp > 0xDFFF && cp <= 0xFFFD)) {
-					result_local[cur++] = (byte) (0xE0 | ((cp >> 12) & 0x0F));
-					result_local[cur++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
-					result_local[cur++] = (byte) (0x80 | (cp & 0x3F));
+					_result[cur++] = (byte) (0xE0 | ((cp >> 12) & 0x0F));
+					_result[cur++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
+					_result[cur++] = (byte) (0x80 | (cp & 0x3F));
 				} else if (cp >= 0x10000 && cp <= 0x10FFFF) {
-					result_local[cur++] = (byte) (0xF0 | ((cp >> 18) & 0x07));
-					result_local[cur++] = (byte) (0x80 | ((cp >> 12) & 0x3F));
-					result_local[cur++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
-					result_local[cur++] = (byte) (0x80 | (cp & 0x3F));
+					_result[cur++] = (byte) (0xF0 | ((cp >> 18) & 0x07));
+					_result[cur++] = (byte) (0x80 | ((cp >> 12) & 0x3F));
+					_result[cur++] = (byte) (0x80 | ((cp >> 6) & 0x3F));
+					_result[cur++] = (byte) (0x80 | (cp & 0x3F));
 				} else {
 					throw new RuntimeException("Unknown unicode codepoint in string! " + Integer.toHexString(cp));
 				}
 			}
 		}
-		result_local[cur] = QUOTE;
-		position = cur + 1;
+		_result[cur] = QUOTE;
+		this.position = cur + 1;
 	}
 
 	public final void writeBuffer(final int off, final int end) {
-		if (position + 64 >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2);
+		int _position = this.position;
+		if (_position + 64 >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
 		}
-		final byte[] result_local = result;
-		int p = position;
+		final byte[] _result = this.result;
 		for (int i = off; i < end; i++) {
-			result_local[p++] = (byte) tmp[i];
+			_result[_position++] = (byte) this.tmp[i];
 		}
-		position = p;
+
+		this.position = _position;
 	}
 
 	public final void writeBuffer(final int len) {
-		if (position + 64 >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2);
+		final int _position = this.position;
+
+		if (_position + 64 >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
 		}
-		final byte[] result_local = result;
-		final int p = position;
+		final byte[] _result = this.result;
 		for (int i = 0; i < len; i++) {
-			result_local[p + i] = (byte) tmp[i];
+			_result[_position + i] = (byte) this.tmp[i];
 		}
-		position += len;
+
+		this.position += len;
 	}
 
 	public final void writeAscii(final String str) {
-		final int len = str.length();
-		if (position + len >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2 + len);
+		final int stringLen = str.length();
+		final int _position = this.position;
+
+		if (_position + stringLen >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + stringLen);
 		}
-		final byte[] result_local = result;
-		final int p = position;
+		final byte[] _result = this.result;
 		for (int i = 0; i < str.length(); i++) {
-			result_local[p + i] = (byte) str.charAt(i);
+			_result[_position + i] = (byte) str.charAt(i);
 		}
-		position += len;
+
+		this.position += stringLen;
 	}
 
 	public final void writeBinary(final byte[] buf) {
-		if (position + (buf.length << 1) + 2 >= result.length) {
-			result = Arrays.copyOf(result, result.length + result.length / 2 + (buf.length << 1) + 2);
+		int _position = this.position;
+
+		if (_position + (buf.length << 1) + 2 >= this.result.length) {
+			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + (buf.length << 1) + 2);
 		}
-		final byte[] result_local = result;
-		result_local[position++] = '"';
-		position += Base64.encodeToBytes(buf, result_local, position);
-		result_local[position++] = '"';
+		final byte[] _result = this.result;
+		_result[_position++] = '"';
+		_position += Base64.encodeToBytes(buf, _result, _position);
+		_result[_position++] = '"';
+
+		this.position = _position;
 	}
 
 	@Override
 	public String toString() {
-		return new String(result, 0, position, utf8);
+		return new String(this.result, 0, this.position, utf8);
 	}
 
 	public static class Bytes {
@@ -297,21 +307,21 @@ public final class JsonWriter extends Writer {
 	}
 
 	public final Bytes toBytes() {
-		return new Bytes(result, position);
+		return new Bytes(this.result, this.position);
 	}
 
 	public final byte[] toByteArray() {
-		return Arrays.copyOf(result, position);
+		return Arrays.copyOf(this.result, this.position);
 	}
 
 	public final void reset() {
-		position = 0;
+		this.position = 0;
 	}
 
 	@Override
 	public void write(final int c) throws IOException {
-		tmp[0] = (char) c;
-		writeString(new String(tmp, 0, 1));
+		this.tmp[0] = (char) c;
+		writeString(new String(this.tmp, 0, 1));
 	}
 
 	@Override
@@ -330,6 +340,6 @@ public final class JsonWriter extends Writer {
 
 	@Override
 	public void close() throws IOException {
-		position = 0;
+		this.position = 0;
 	}
 }
