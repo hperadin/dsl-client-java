@@ -33,22 +33,22 @@ public final class JsonReader {
 	}
 
 	public final byte read() throws IOException {
-		if (this.currentIndex >= this.length) {
+		if (currentIndex >= length) {
 			throw new IOException("end of stream");
 		}
-		return this.last = this.buffer[this.currentIndex++];
+		return last = buffer[currentIndex++];
 	}
 
 	public final byte last() {
-		return this.last;
+		return last;
 	}
 
 	public final String readShortValue() throws IOException {
-		int _currentIndex = this.currentIndex;
-		final int _length = this.length;
-		char _lastChar = (char) this.last;
-		final byte[] _buffer = this.buffer;
-		final char[] _tmp = this.tmp;
+		int _currentIndex = currentIndex;
+		final int _length = length;
+		char _lastChar = (char) last;
+		final byte[] _buffer = buffer;
+		final char[] _tmp = tmp;
 
 		_tmp[0] = _lastChar;
 		int i=1;
@@ -56,94 +56,94 @@ public final class JsonReader {
 			_tmp[i] = _lastChar = (char) _buffer[_currentIndex];
 		}
 
-		this.last = (byte) _lastChar;
-		this.currentIndex = _currentIndex;
-		return new String(this.tmp, 0, i - 1);
+		last = (byte) _lastChar;
+		currentIndex = _currentIndex;
+		return new String(tmp, 0, i - 1);
 	}
 
 	public final int getTokenStart() {
-		return this.tokenStart;
+		return tokenStart;
 	}
 
 	public final int getCurrentIndex() {
-		return this.currentIndex;
+		return currentIndex;
 	}
 
 	public final char[] readNumber() {
-		final char[] _tmp = this.tmp;
-		int _currentIndex=this.currentIndex;
-		final int _length = this.length;
-		final byte[] _buffer = this.buffer;
-		char _lastChar = (char) this.last;
+		final char[] _tmp = tmp;
+		int _currentIndex=currentIndex;
+		final int _length = length;
+		final byte[] _buffer = buffer;
+		char _lastChar = (char) last;
 
-		this.tokenStart = _currentIndex - 1;
+		tokenStart = _currentIndex - 1;
 		_tmp[0] = _lastChar;
 		for (int i = 1; _lastChar != ',' && _lastChar != '}' && _lastChar != ']' && _lastChar != '"' && i < TMP_SIZE && _currentIndex < _length; i++, _currentIndex++) {
 			_tmp[i] = _lastChar = (char) _buffer[_currentIndex];
 		}
 
-		this.last = (byte) _lastChar;
-		this.currentIndex = _currentIndex;
+		last = (byte) _lastChar;
+		currentIndex = _currentIndex;
 
-		return this.tmp;
+		return tmp;
 	}
 
 	public final String readSimpleString() throws IOException {
-		if (this.last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) this.last);
-		final byte[] _buffer = this.buffer;
-		final char[] _tmp = this.tmp;
-		final int _length = this.length;
-		final int start = this.currentIndex;
+		if (last != '"')
+			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
+		final byte[] _buffer = buffer;
+		final char[] _tmp = tmp;
+		final int _length = length;
+		final int start = currentIndex;
 		int i = start;
 		for (; i < _length && _buffer[i] != '"'; i++) {
 			_tmp[i - start] = (char) _buffer[i];
 		}
-		this.currentIndex = i + 1;
-		this.last = '"';
+		currentIndex = i + 1;
+		last = '"';
 
-		return new String(this.tmp, 0, i - start);
+		return new String(tmp, 0, i - start);
 	}
 
 	public final char[] readSimpleQuote() throws IOException {
-		if (this.last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) this.last);
-		final byte[] _buffer = this.buffer;
-		final char[] _tmp = this.tmp;
-		final int _length = this.length;
-		final int start = this.tokenStart = this.currentIndex;
-		int i = this.currentIndex;
+		if (last != '"')
+			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
+		final byte[] _buffer = buffer;
+		final char[] _tmp = tmp;
+		final int _length = length;
+		final int start = tokenStart = currentIndex;
+		int i = currentIndex;
 		for (; i < _length && _buffer[i] != '"'; i++) {
 			_tmp[i - start] = (char) _buffer[i];
 		}
-		this.currentIndex = i + 1;
-		this.last = '"';
-		return this.tmp;
+		currentIndex = i + 1;
+		last = '"';
+		return tmp;
 	}
 
 	public final String readString() throws IOException {
 
-		final int startIndex = this.currentIndex;
+		final int startIndex = currentIndex;
 		// At this point, buffer cannot be empty or null, it is safe to read first character
-		if (this.last != '"') {
-			throw new IOException("JSON string must start with a double quote! Instead found: " + byteDetails(this.buffer[this.currentIndex - 1]));
+		if (last != '"') {
+			throw new IOException("JSON string must start with a double quote! Instead found: " + byteDetails(buffer[currentIndex - 1]));
 		}
 
 		byte bb = 0;
 		{
-			final byte[] _buffer = this.buffer;
-			final char[] _tmp = this.tmp;
-			final int _length = this.length;
-			int _currentIndex = this.currentIndex;
+			final byte[] _buffer = buffer;
+			final char[] _tmp = tmp;
+			final int _length = length;
+			int _currentIndex = currentIndex;
 			for (int pos = 0; pos < TMP_SIZE; pos++) {
 				if (_currentIndex >= _length) {
-					this.currentIndex = _currentIndex;
+					currentIndex = _currentIndex;
 					throw new IOException("JSON string was not closed with a double quote!");
 				}
 				bb = _buffer[_currentIndex++];
 				if (bb == '"') {
-					this.last = '"';
-					this.currentIndex = _currentIndex;
+					last = '"';
+					currentIndex = _currentIndex;
 					return new String(_tmp, 0, pos);
 				}
 				// If we encounter a backslash, which is a beginning of an escape sequence
@@ -153,19 +153,19 @@ public final class JsonReader {
 				if ((bb ^ '\\') < 1) break;
 				_tmp[pos] = (char) bb;
 			}
-			this.currentIndex = _currentIndex;
+			currentIndex = _currentIndex;
 		}
 
 		// If the buffer contains an ASCII string (no high bit set) without any escape codes "\n", "\t", etc...,
 		// there is no need to instantiate any temporary buffers, we just decode the original buffer directly
 		// via ISO-8859-1 encoding since it is the fastest encoding which is guaranteed to retain all ASCII characters
 		{
-			final byte[] _buffer = this.buffer;
-			final int _length = this.length;
-			int _currentIndex = this.currentIndex;
+			final byte[] _buffer = buffer;
+			final int _length = length;
+			int _currentIndex = currentIndex;
 			while (true) {
 				if (_currentIndex >= _length) {
-					this.currentIndex = _currentIndex;
+					currentIndex = _currentIndex;
 					throw new IOException("JSON string was not closed with a double quote!");
 				}
 				// If we encounter a backslash, which is a beginning of an escape sequence
@@ -175,34 +175,34 @@ public final class JsonReader {
 				if ((bb ^ '\\') < 1) break;
 				bb = _buffer[_currentIndex++];
 				if (bb == '"') {
-					this.last = '"';
-					this.currentIndex = _currentIndex;
+					last = '"';
+					currentIndex = _currentIndex;
 					return new String(_buffer, startIndex, _currentIndex - startIndex - 1, "ISO-8859-1");
 				}
 			}
 		}
 
 		// temporary buffer, will resize if need be
-		int soFar = --this.currentIndex - startIndex;
+		int soFar = --currentIndex - startIndex;
 		char[] chars = new char[soFar + 256];
 
 		// copy all the ASCII characters so far
 		{
-			final byte[] _buffer = this.buffer;
+			final byte[] _buffer = buffer;
 			for (int i = soFar - 1; i >= 0; i--) {
 				chars[i] = (char) _buffer[startIndex + i];
 			}
 		}
 
 		{
-			final byte[] _buffer = this.buffer;
-			final int _length = this.length;
-			int _currentIndex = this.currentIndex;
+			final byte[] _buffer = buffer;
+			final int _length = length;
+			int _currentIndex = currentIndex;
 			while (_currentIndex < _length) {
 				int bc = _buffer[_currentIndex++];
 				if (bc == '"') {
-					this.last = '"';
-					this.currentIndex = _currentIndex;
+					last = '"';
+					currentIndex = _currentIndex;
 					return new String(chars, 0, soFar);
 				}
 
@@ -245,7 +245,7 @@ public final class JsonReader {
 							break;
 
 						default:
-							this.currentIndex = _currentIndex;
+							currentIndex = _currentIndex;
 							throw new IOException("Could not parse String, got invalid escape combination '\\" + bc + "'");
 					}
 				} else if ((bc & 0x80) != 0) {
@@ -261,7 +261,7 @@ public final class JsonReader {
 							if ((bc & 0xF8) == 0xF0) {
 								bc = ((bc & 0x07) << 18) + ((u2 & 0x3F) << 12) + ((u3 & 0x3F) << 6) + (u4 & 0x3F);
 							} else {
-								this.currentIndex = _currentIndex;
+								currentIndex = _currentIndex;
 								// there are legal 5 & 6 byte combinations, but none are _valid_
 								throw new IOException();
 							}
@@ -269,7 +269,7 @@ public final class JsonReader {
 							if (bc >= 0x10000) {
 								// check if valid unicode
 								if (bc >= 0x110000) {
-									this.currentIndex = _currentIndex;
+									currentIndex = _currentIndex;
 									throw new IOException();
 								}
 
@@ -283,7 +283,7 @@ public final class JsonReader {
 				}
 				chars[soFar++] = (char) bc;
 			}
-			this.currentIndex = _currentIndex;
+			currentIndex = _currentIndex;
 		}
 		throw new IOException("JSON string was not closed with a double quote!");
 	}
@@ -300,14 +300,14 @@ public final class JsonReader {
 	}
 
 	private boolean wasWhiteSpace() {
-		if (this.last == '"' || this.last == ',') {
+		if (last == '"' || last == ',') {
 			return false;
 		}
 
-		final byte[] _buffer = this.buffer;
-		final int _length = this.length;
-		int _currentIndex = this.currentIndex;
-		switch (this.last) {
+		final byte[] _buffer = buffer;
+		final int _length = length;
+		int _currentIndex = currentIndex;
+		switch (last) {
 			case 9:
 			case 10:
 			case 11:
@@ -315,16 +315,16 @@ public final class JsonReader {
 			case 13:
 			case 32:
 			case -96:
-				this.currentIndex = _currentIndex;
+				currentIndex = _currentIndex;
 				return true;
 			case -31:
 				if (_currentIndex + 1 < _length && _buffer[_currentIndex] == -102 && _buffer[_currentIndex + 1] == -128) {
 					_currentIndex += 2;
-					this.last = ' ';
-					this.currentIndex = _currentIndex;
+					last = ' ';
+					currentIndex = _currentIndex;
 					return true;
 				}
-				this.currentIndex = _currentIndex;
+				currentIndex = _currentIndex;
 				return false;
 			case -30:
 				if (_currentIndex + 1 < _length) {
@@ -332,12 +332,12 @@ public final class JsonReader {
 					final byte b2 = _buffer[_currentIndex + 1];
 					if (b1 == -127 && b2 == -97) {
 						_currentIndex += 2;
-						this.last = ' ';
-						this.currentIndex = _currentIndex;
+						last = ' ';
+						currentIndex = _currentIndex;
 						return true;
 					}
 					if (b1 != -128) {
-						this.currentIndex = _currentIndex;
+						currentIndex = _currentIndex;
 						return false;
 					}
 					switch (b2) {
@@ -356,28 +356,28 @@ public final class JsonReader {
 						case -87:
 						case -81:
 							_currentIndex += 2;
-							this.last = ' ';
-							this.currentIndex = _currentIndex;
+							last = ' ';
+							currentIndex = _currentIndex;
 							return true;
 						default:
-							this.currentIndex = _currentIndex;
+							currentIndex = _currentIndex;
 							return false;
 					}
 				} else {
-					this.currentIndex = _currentIndex;
+					currentIndex = _currentIndex;
 					return false;
 				}
 			case -29:
 				if (_currentIndex + 1 < _length && _buffer[_currentIndex] == -128 && _buffer[_currentIndex + 1] == -128) {
 					_currentIndex += 2;
-					this.last = ' ';
-					this.currentIndex = _currentIndex;
+					last = ' ';
+					currentIndex = _currentIndex;
 					return true;
 				}
-				this.currentIndex = _currentIndex;
+				currentIndex = _currentIndex;
 				return false;
 			default:
-				this.currentIndex = _currentIndex;
+				currentIndex = _currentIndex;
 				return false;
 		}
 	}
@@ -386,23 +386,23 @@ public final class JsonReader {
 		read();
 		while (wasWhiteSpace())
 			read();
-		return this.last;
+		return last;
 	}
 
 	public final byte moveToNextToken() throws IOException {
 		while (wasWhiteSpace())
 			read();
-		return this.last;
+		return last;
 	}
 
 	public final long positionInStream() {
-		return this.currentIndex;
+		return currentIndex;
 	}
 
 	public final int fillName() throws IOException {
-		if (this.last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) this.last);
-		this.tokenStart = this.currentIndex;
+		if (last != '"')
+			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
+		tokenStart = currentIndex;
 		byte c = read();
 		long hash = 0x811c9dc5;
 		for (; c != '"'; c = read()) {
@@ -410,14 +410,14 @@ public final class JsonReader {
 			hash *= 0x1000193;
 		}
 		if (read() != ':')
-			throw new IOException("Expecting ':' at position " + positionInStream() + ". Found " + (char) this.last);
+			throw new IOException("Expecting ':' at position " + positionInStream() + ". Found " + (char) last);
 		return (int) hash;
 	}
 
 	public final int calcHash() throws IOException {
-		if (this.last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) this.last);
-		this.tokenStart = this.currentIndex;
+		if (last != '"')
+			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
+		tokenStart = currentIndex;
 		byte c = read();
 		long hash = 0x811c9dc5;
 		do {
@@ -428,11 +428,11 @@ public final class JsonReader {
 	}
 
 	public final boolean wasLastName(final String name) {
-		if (name.length() != this.currentIndex - this.tokenStart) {
+		if (name.length() != currentIndex - tokenStart) {
 			return false;
 		}
-		final byte[] _buffer = this.buffer;
-		final int _tokenStart = this.tokenStart;
+		final byte[] _buffer = buffer;
+		final int _tokenStart = tokenStart;
 		final int nameLength = name.length();
 		for (int i = 0; i < nameLength; i++) {
 			if (name.charAt(i) != _buffer[_tokenStart + i]) {
@@ -443,7 +443,7 @@ public final class JsonReader {
 	}
 
 	public final String getLastName() throws IOException {
-		return new String(this.buffer, this.tokenStart, this.currentIndex - this.tokenStart - 1, "ISO-8859-1");
+		return new String(buffer, tokenStart, currentIndex - tokenStart - 1, "ISO-8859-1");
 	}
 
 	private byte skipString() throws IOException {
@@ -457,8 +457,8 @@ public final class JsonReader {
 	}
 
 	public final byte skip() throws IOException {
-		if (this.last == '"') return skipString();
-		else if (this.last == '{') {
+		if (last == '"') return skipString();
+		else if (last == '{') {
 			byte nextToken = getNextToken();
 			if (nextToken == '}') return getNextToken();
 			if (nextToken == '"') nextToken = skipString();
@@ -481,7 +481,7 @@ public final class JsonReader {
 			if (nextToken != '}')
 				throw new IOException("Expecting '}' at position " + positionInStream() + ". Found " + (char) nextToken);
 			return getNextToken();
-		} else if (this.last == '[') {
+		} else if (last == '[') {
 			getNextToken();
 			byte nextToken = skip();
 			while (nextToken == ',') {
@@ -492,28 +492,28 @@ public final class JsonReader {
 				throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) nextToken);
 			return getNextToken();
 		} else {
-			while (this.last != ',' && this.last != '}' && this.last != ']')
+			while (last != ',' && last != '}' && last != ']')
 				read();
-			return this.last;
+			return last;
 		}
 	}
 
 	public final String readNext() throws IOException {
-		final int start = this.currentIndex - 1;
+		final int start = currentIndex - 1;
 		skip();
-		return new String(this.buffer, start, this.currentIndex - start - 1, "UTF-8");
+		return new String(buffer, start, currentIndex - start - 1, "UTF-8");
 	}
 
 	public final byte[] readBase64() throws IOException {
-		if (this.last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + " at base64 start. Found " + (char) this.last);
-		final int start = this.currentIndex;
-		this.currentIndex = Base64.findEnd(this.buffer, start);
-		this.last = this.buffer[this.currentIndex++];
-		if (this.last != '"') {
-			throw new IOException("Expecting '\"' at position " + positionInStream() + " at base64 end. Found " + (char) this.last);
+		if (last != '"')
+			throw new IOException("Expecting '\"' at position " + positionInStream() + " at base64 start. Found " + (char) last);
+		final int start = currentIndex;
+		currentIndex = Base64.findEnd(buffer, start);
+		last = buffer[currentIndex++];
+		if (last != '"') {
+			throw new IOException("Expecting '\"' at position " + positionInStream() + " at base64 end. Found " + (char) last);
 		}
-		return Base64.decodeFast(this.buffer, start, this.currentIndex - 1);
+		return Base64.decodeFast(buffer, start, currentIndex - 1);
 	}
 
 	public static interface ReadObject<T> {
@@ -525,50 +525,50 @@ public final class JsonReader {
 	}
 
 	public final boolean wasNull() throws IOException {
-		if (this.last == 'n') {
-			final byte[] _buffer = this.buffer;
-			final int _currentIndex = this.currentIndex;
-			if (_currentIndex + 2 < this.length
+		if (last == 'n') {
+			final byte[] _buffer = buffer;
+			final int _currentIndex = currentIndex;
+			if (_currentIndex + 2 < length
 					&& _buffer[_currentIndex] == 'u'
 					&& _buffer[_currentIndex + 1] == 'l'
 					&& _buffer[_currentIndex + 2] == 'l') {
-				this.currentIndex += 3;
+				currentIndex += 3;
 				return true;
 			}
-			throw new IOException("Invalid null value found at: " + this.currentIndex);
+			throw new IOException("Invalid null value found at: " + currentIndex);
 		}
 		return false;
 	}
 
 	public final boolean wasTrue() throws IOException {
-		if (this.last == 't') {
-			final byte[] _buffer = this.buffer;
-			final int _currentIndex = this.currentIndex;
-			if (_currentIndex + 2 < this.length
+		if (last == 't') {
+			final byte[] _buffer = buffer;
+			final int _currentIndex = currentIndex;
+			if (_currentIndex + 2 < length
 					&& _buffer[_currentIndex] == 'r'
 					&& _buffer[_currentIndex + 1] == 'u'
 					&& _buffer[_currentIndex + 2] == 'e') {
-				this.currentIndex += 3;
+				currentIndex += 3;
 				return true;
 			}
-			throw new IOException("Invalid boolean value found at: " + this.currentIndex);
+			throw new IOException("Invalid boolean value found at: " + currentIndex);
 		}
 		return false;
 	}
 
 	public final boolean wasFalse() throws IOException {
-		if (this.last == 'f') {
-			final byte[] _buffer = this.buffer;
-			final int _currentIndex = this.currentIndex;
-			if (_currentIndex + 3 < this.length
+		if (last == 'f') {
+			final byte[] _buffer = buffer;
+			final int _currentIndex = currentIndex;
+			if (_currentIndex + 3 < length
 					&& _buffer[_currentIndex] == 'a'
 					&& _buffer[_currentIndex + 1] == 'l'
 					&& _buffer[_currentIndex + 2] == 's'
 					&& _buffer[_currentIndex + 3] == 'e') {
-				this.currentIndex += 4;
+				currentIndex += 4;
 				return true;
 			}
-			throw new IOException("Invalid boolean value found at: " + this.currentIndex);
+			throw new IOException("Invalid boolean value found at: " + currentIndex);
 		}
 		return false;
 	}
@@ -591,9 +591,9 @@ public final class JsonReader {
 			getNextToken();
 			res.add(readObject.read(this));
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 
@@ -603,9 +603,9 @@ public final class JsonReader {
 			getNextToken();
 			res.add(readObject.read(this));
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 
@@ -635,9 +635,9 @@ public final class JsonReader {
 				res.add(readObject.read(this));
 			}
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 
@@ -649,7 +649,7 @@ public final class JsonReader {
 			res.add(readObject.read(this));
 			moveToNextToken();
 		}
-		while (this.last == ',') {
+		while (last == ',') {
 			getNextToken();
 			if (wasNull()) {
 				res.add(null);
@@ -659,9 +659,9 @@ public final class JsonReader {
 				moveToNextToken();
 			}
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 
@@ -672,17 +672,17 @@ public final class JsonReader {
 	}
 
 	public final <T extends JsonObject> void deserializeCollection(final ReadJsonObject<T> readObject, final Collection<T> res) throws IOException {
-		if (this.last == '{') {
-			res.add(readObject.deserialize(this, this.locator));
-		} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last == '{') {
+			res.add(readObject.deserialize(this, locator));
+		} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) last);
 		while (getNextToken() == ',') {
 			if (getNextToken() == '{') {
-				res.add(readObject.deserialize(this, this.locator));
-			} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) this.last);
+				res.add(readObject.deserialize(this, locator));
+			} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) last);
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 
@@ -693,21 +693,21 @@ public final class JsonReader {
 	}
 
 	public final <T extends JsonObject> void deserializeNullableCollection(final ReadJsonObject<T> readObject, final Collection<T> res) throws IOException {
-		if (this.last == '{') {
-			res.add(readObject.deserialize(this, this.locator));
+		if (last == '{') {
+			res.add(readObject.deserialize(this, locator));
 		} else if (wasNull()) {
 			res.add(null);
-		} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) this.last);
+		} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) last);
 		while (getNextToken() == ',') {
 			if (getNextToken() == '{') {
-				res.add(readObject.deserialize(this, this.locator));
+				res.add(readObject.deserialize(this, locator));
 			} else if (wasNull()) {
 				res.add(null);
-			} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) this.last);
+			} else throw new IOException("Expecting '{' at position " + positionInStream() + ". Found " + (char) last);
 		}
-		if (this.last != ']') {
-			if (this.currentIndex >= this.length) throw new IOException("Unexpected end of json in collection.");
-			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) this.last);
+		if (last != ']') {
+			if (currentIndex >= length) throw new IOException("Unexpected end of json in collection.");
+			else throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) last);
 		}
 	}
 }

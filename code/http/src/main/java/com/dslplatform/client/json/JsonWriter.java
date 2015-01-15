@@ -36,12 +36,12 @@ public final class JsonWriter extends Writer {
 	public static final byte ESCAPE = '\\';
 
 	public final void writeNull() {
-		final int start = this.position;
-		this.position += 4;
-		if (this.position >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
+		final int start = position;
+		position += 4;
+		if (position >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		_result[start] = 'n';
 		_result[start + 1] = 'u';
 		_result[start + 2] = 'l';
@@ -49,19 +49,19 @@ public final class JsonWriter extends Writer {
 	}
 
 	public final void writeByte(final byte c) {
-		if (this.position == this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
+		if (position == result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2);
 		}
-		this.result[this.position++] = c;
+		result[position++] = c;
 	}
 
 	public final void writeString(final String str) {
 		final int stringLen = str.length();
-		final int _position = this.position;
-		if (_position + (stringLen << 2) + (stringLen << 1) + 2 >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + (stringLen << 2) + (stringLen << 1) + 2);
+		final int _position = position;
+		if (_position + (stringLen << 2) + (stringLen << 1) + 2 >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2 + (stringLen << 2) + (stringLen << 1) + 2);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		_result[_position] = QUOTE;
 		int cur = _position + 1;
 		for (int i = 0; i < stringLen; i++) {
@@ -232,68 +232,68 @@ public final class JsonWriter extends Writer {
 			}
 		}
 		_result[cur] = QUOTE;
-		this.position = cur + 1;
+		position = cur + 1;
 	}
 
 	public final void writeBuffer(final int off, final int end) {
-		int _position = this.position;
-		if (_position + 64 >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
+		int _position = position;
+		if (_position + 64 >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		for (int i = off; i < end; i++) {
-			_result[_position++] = (byte) this.tmp[i];
+			_result[_position++] = (byte) tmp[i];
 		}
 
-		this.position = _position;
+		position = _position;
 	}
 
 	public final void writeBuffer(final int len) {
-		final int _position = this.position;
+		final int _position = position;
 
-		if (_position + 64 >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2);
+		if (_position + 64 >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		for (int i = 0; i < len; i++) {
-			_result[_position + i] = (byte) this.tmp[i];
+			_result[_position + i] = (byte) tmp[i];
 		}
 
-		this.position += len;
+		position += len;
 	}
 
 	public final void writeAscii(final String str) {
 		final int stringLen = str.length();
-		final int _position = this.position;
+		final int _position = position;
 
-		if (_position + stringLen >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + stringLen);
+		if (_position + stringLen >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2 + stringLen);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		for (int i = 0; i < str.length(); i++) {
 			_result[_position + i] = (byte) str.charAt(i);
 		}
 
-		this.position += stringLen;
+		position += stringLen;
 	}
 
 	public final void writeBinary(final byte[] buf) {
-		int _position = this.position;
+		int _position = position;
 
-		if (_position + (buf.length << 1) + 2 >= this.result.length) {
-			this.result = Arrays.copyOf(this.result, this.result.length + this.result.length / 2 + (buf.length << 1) + 2);
+		if (_position + (buf.length << 1) + 2 >= result.length) {
+			result = Arrays.copyOf(result, result.length + result.length / 2 + (buf.length << 1) + 2);
 		}
-		final byte[] _result = this.result;
+		final byte[] _result = result;
 		_result[_position++] = '"';
 		_position += Base64.encodeToBytes(buf, _result, _position);
 		_result[_position++] = '"';
 
-		this.position = _position;
+		position = _position;
 	}
 
 	@Override
 	public String toString() {
-		return new String(this.result, 0, this.position, utf8);
+		return new String(result, 0, position, utf8);
 	}
 
 	public static class Bytes {
@@ -307,21 +307,21 @@ public final class JsonWriter extends Writer {
 	}
 
 	public final Bytes toBytes() {
-		return new Bytes(this.result, this.position);
+		return new Bytes(result, position);
 	}
 
 	public final byte[] toByteArray() {
-		return Arrays.copyOf(this.result, this.position);
+		return Arrays.copyOf(result, position);
 	}
 
 	public final void reset() {
-		this.position = 0;
+		position = 0;
 	}
 
 	@Override
 	public void write(final int c) throws IOException {
-		this.tmp[0] = (char) c;
-		writeString(new String(this.tmp, 0, 1));
+		tmp[0] = (char) c;
+		writeString(new String(tmp, 0, 1));
 	}
 
 	@Override
@@ -340,6 +340,6 @@ public final class JsonWriter extends Writer {
 
 	@Override
 	public void close() throws IOException {
-		this.position = 0;
+		position = 0;
 	}
 }
