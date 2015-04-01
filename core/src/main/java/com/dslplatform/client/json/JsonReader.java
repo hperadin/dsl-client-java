@@ -1,28 +1,37 @@
 package com.dslplatform.client.json;
 
-import com.dslplatform.patterns.ServiceLocator;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.dslplatform.patterns.ServiceLocator;
 
 public final class JsonReader {
 	private final byte[] buffer;
 	private final int length;
 	private final ServiceLocator locator;
-	private final char[] tmp = new char[64];
+	private final char[] tmp;
 
 	private int tokenStart;
 	private int currentIndex = 0;
 	private byte last = ' ';
 
+	public JsonReader(final byte[] buffer, final ServiceLocator locator, final char[] tmp) {
+		this.tmp = tmp;
+		this.buffer = buffer;
+		this.length = buffer.length;
+		this.locator = locator;
+	}
+
 	public JsonReader(final byte[] buffer, final ServiceLocator locator) {
+		this.tmp = new char[64];
 		this.buffer = buffer;
 		this.length = buffer.length;
 		this.locator = locator;
 	}
 
 	public JsonReader(final byte[] buffer, final int length, final ServiceLocator locator) throws IOException {
+		this.tmp = new char[64];
 		this.buffer = buffer;
 		this.length = length;
 		this.locator = locator;
@@ -506,13 +515,13 @@ public final class JsonReader {
 	}
 
 	public final <T> ArrayList<T> deserializeCollectionWithGet(final ReadObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeCollectionWithGet(readObject, res);
 		return res;
 	}
 
 	public final <T> ArrayList<T> deserializeCollectionWithMove(final ReadObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeCollectionWithMove(readObject, res);
 		return res;
 	}
@@ -542,13 +551,13 @@ public final class JsonReader {
 	}
 
 	public final <T> ArrayList<T> deserializeNullableCollectionWithGet(final ReadObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeNullableCollectionWithGet(readObject, res);
 		return res;
 	}
 
 	public final <T> ArrayList<T> deserializeNullableCollectionWithMove(final ReadObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeNullableCollectionWithMove(readObject, res);
 		return res;
 	}
@@ -598,7 +607,7 @@ public final class JsonReader {
 	}
 
 	public final <T extends JsonObject> ArrayList<T> deserializeCollection(final ReadJsonObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeCollection(readObject, res);
 		return res;
 	}
@@ -621,7 +630,7 @@ public final class JsonReader {
 	}
 
 	public final <T extends JsonObject> ArrayList<T> deserializeNullableCollection(final ReadJsonObject<T> readObject) throws IOException {
-		ArrayList<T> res = new ArrayList<T>();
+		final ArrayList<T> res = new ArrayList<T>(4);
 		deserializeNullableCollection(readObject, res);
 		return res;
 	}

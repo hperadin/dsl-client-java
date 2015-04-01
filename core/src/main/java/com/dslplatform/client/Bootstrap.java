@@ -143,7 +143,7 @@ public class Bootstrap {
 	}
 
 	private static void registerS3(
-			MapServiceLocator locator,
+			final MapServiceLocator locator,
 			final Properties properties,
 			final ExecutorService executorService){
 		locator.resolveOrRegister(S3Repository.class, new MapServiceLocator.LazyInstance<S3Repository>() {
